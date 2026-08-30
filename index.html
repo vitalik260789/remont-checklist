@@ -444,7 +444,9 @@ const POST_GATE = {
 
 const ALL_ITEMS = PHASES.flatMap(p => p.items).concat(POST_GATE.items);
 const GATE_ITEMS = PHASES.flatMap(p => p.items); // items required before the gate opens
-const JSONBLOB_URL = "https://jsonblob.com/api/jsonBlob/01a053d7-973b-7dbf-b9bd-821c00224d1e";
+const JSONBIN_BIN_ID = "6a9476a5da38895dfe23b46b";
+const JSONBIN_MASTER_KEY = "$2a$10$Oi6fRP0c/uXsGAd5LgxbMetuXOvWcxUN7uK7s0KvmwAdjgWmzdvpy";
+const JSONBIN_URL = "https://api.jsonbin.io/v3/b/" + JSONBIN_BIN_ID;
 
 let state = {};
 
@@ -500,9 +502,12 @@ async function toggleItem(id){
   state[id] = !state[id];
   updateUI();
   try{
-    const res = await fetch(JSONBLOB_URL, {
+    const res = await fetch(JSONBIN_URL, {
       method: "PUT",
-      headers: { "Content-Type": "text/plain" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Master-Key": JSONBIN_MASTER_KEY
+      },
       body: JSON.stringify(state)
     });
     if(!res.ok) throw new Error("HTTP " + res.status);
@@ -542,10 +547,16 @@ function updateUI(){
 
 async function loadState(){
   try{
-    const res = await fetch(JSONBLOB_URL);
+    const res = await fetch(JSONBIN_URL + "/latest", {
+      headers: {
+        "X-Master-Key": JSONBIN_MASTER_KEY,
+        "X-Bin-Meta": "false"
+      }
+    });
     if(!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
     state = data && typeof data === "object" ? data : {};
+    delete state.status; // remove the jsonbin placeholder field
     document.getElementById("syncNote").textContent = "Синхронизировано";
   }catch(e){
     state = {};
@@ -559,9 +570,12 @@ document.getElementById("resetBtn").addEventListener("click", async () => {
   if(!confirm("Сбросить все отметки для всех, у кого есть эта ссылка?")) return;
   state = {};
   try{
-    await fetch(JSONBLOB_URL, {
+    await fetch(JSONBIN_URL, {
       method: "PUT",
-      headers: { "Content-Type": "text/plain" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Master-Key": JSONBIN_MASTER_KEY
+      },
       body: JSON.stringify(state)
     });
   }catch(e){}
