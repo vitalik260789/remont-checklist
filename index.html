@@ -444,7 +444,7 @@ const POST_GATE = {
 
 const ALL_ITEMS = PHASES.flatMap(p => p.items).concat(POST_GATE.items);
 const GATE_ITEMS = PHASES.flatMap(p => p.items); // items required before the gate opens
-const STORAGE_KEY = "renovation-73m2-24f-checklist-v1";
+const JSONBLOB_URL = "https://jsonblob.com/api/jsonBlob/01a053d7-973b-7dbf-b9bd-821c00224d1e";
 
 let state = {};
 
@@ -500,7 +500,11 @@ async function toggleItem(id){
   state[id] = !state[id];
   updateUI();
   try{
-    await window.storage.set(STORAGE_KEY, JSON.stringify(state), true);
+    await fetch(JSONBLOB_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(state)
+    });
     document.getElementById("syncNote").textContent = "Сохранено — видно всем по ссылке";
   }catch(e){
     document.getElementById("syncNote").textContent = "Не удалось сохранить, попробуйте ещё раз";
@@ -537,8 +541,9 @@ function updateUI(){
 
 async function loadState(){
   try{
-    const result = await window.storage.get(STORAGE_KEY, true);
-    state = result && result.value ? JSON.parse(result.value) : {};
+    const res = await fetch(JSONBLOB_URL);
+    const data = await res.json();
+    state = data && typeof data === "object" ? data : {};
     document.getElementById("syncNote").textContent = "Синхронизировано";
   }catch(e){
     state = {};
@@ -552,7 +557,11 @@ document.getElementById("resetBtn").addEventListener("click", async () => {
   if(!confirm("Сбросить все отметки для всех, у кого есть эта ссылка?")) return;
   state = {};
   try{
-    await window.storage.set(STORAGE_KEY, JSON.stringify(state), true);
+    await fetch(JSONBLOB_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(state)
+    });
   }catch(e){}
   renderPhases();
   updateUI();
