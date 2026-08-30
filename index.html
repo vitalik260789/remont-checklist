@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Чек-лист «до штукатурки» — 73 м², 24 этаж</title>
+<title>Чек-лист «до штукатурки» — 73 м², 20 этаж</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -258,10 +258,13 @@
   .gate-status.locked{color:var(--flag);}
   .gate-status.open{color:#3a6b2e;}
 
-  footer.stamp-block{
+  .stamp-block{
     margin-top:26px;
     border:1.5px solid var(--ink);
     background:var(--card-bg);
+  }
+  .progress-wrap + .stamp-block{
+    margin-top:12px;
   }
   .stamp-row{
     display:grid;
@@ -277,6 +280,7 @@
   .stamp-cell:last-child{border-right:none;}
   .stamp-cell .k{color:var(--ink-soft); display:block; font-size:9px; text-transform:uppercase; letter-spacing:.08em; margin-bottom:2px;}
   .stamp-row:last-child .stamp-cell{border-bottom:none;}
+  footer.stamp-block .stamp-row{grid-template-columns:1fr 1fr;}
 
   .actions{
     display:flex;
@@ -313,8 +317,8 @@
 
   <header class="title">
     <div class="stamp">
-      <span>Дизайн-проект · Алевтина Шевченко</span>
-      <span>73 м² · 24 этаж</span>
+      <span>Минск, ЖК «Мир», дом Самбо</span>
+      <span>73 м² · 20 этаж · кв. 244</span>
     </div>
     <h1>Чек-лист «до штукатурки»</h1>
     <p class="subtitle">Все пункты этого списка нужно закрыть <b>до</b> оштукатуривания стен — после него менять разводку электрики, сантехники и положение коробов станет дорого и почти невозможно.</p>
@@ -336,6 +340,14 @@
     </div>
   </div>
 
+  <div class="stamp-block">
+    <div class="stamp-row">
+      <div class="stamp-cell"><span class="k">Всего пунктов</span><span id="totalCount">—</span></div>
+      <div class="stamp-cell"><span class="k">Выполнено</span><span id="doneCount">—</span></div>
+      <div class="stamp-cell"><span class="k">Флагов «не забыть»</span><span id="flagCount">—</span></div>
+    </div>
+  </div>
+
   <div id="phases"></div>
 
   <div class="gate-block">
@@ -348,14 +360,8 @@
 
   <footer class="stamp-block">
     <div class="stamp-row">
-      <div class="stamp-cell"><span class="k">Объект</span>Квартира, 73 м², 24 этаж</div>
-      <div class="stamp-cell"><span class="k">Проект</span>Дизайн-проект, 10 листов</div>
-      <div class="stamp-cell"><span class="k">Дизайнер</span>Алевтина Шевченко</div>
-    </div>
-    <div class="stamp-row">
-      <div class="stamp-cell"><span class="k">Всего пунктов</span><span id="totalCount">—</span></div>
-      <div class="stamp-cell"><span class="k">Выполнено</span><span id="doneCount">—</span></div>
-      <div class="stamp-cell"><span class="k">Флагов «не забыть»</span><span id="flagCount">—</span></div>
+      <div class="stamp-cell"><span class="k">Объект</span>Квартира №244, 73 м², 20 этаж</div>
+      <div class="stamp-cell"><span class="k">Адрес</span>Минск, ЖК «Мир», дом Самбо</div>
     </div>
   </footer>
 
@@ -375,7 +381,6 @@ const PHASES = [
       { id:"p1_soglas", text:"Согласовать перепланировку в соответствующих органах.",
         detail:"Проект прямо рекомендует официальное согласование — без него перегородки и сантехнические переносы юридически не закреплены." },
       { id:"p1_demontazh", text:"Демонтировать старые перегородки и убрать демонтируемые элементы по плану демонтажа." },
-      { id:"p1_radiator_demontazh", text:"Демонтировать один радиатор (полный демонтаж) и подготовить точки под 3 переноса + 1 замену." },
     ]
   },
   {
@@ -413,7 +418,7 @@ const PHASES = [
       { id:"p4_rozetki", text:"Развести розетки 220V и влагозащищённые розетки по всем помещениям." },
       { id:"p4_special", text:"Вывести спец. точки: кондиционер, бойлер, полотенцесушитель, видеодомофон, оптический кабель." },
       { id:"p4_ac", text:"Вывести кабель и трассу под кондиционер на фасад (h=2450), мощность согласовать со специалистом.",
-        flag:"НЕ ЗАБЫТЬ", detail:"24 этаж — доступ к фасаду для монтажа блока нужно продумать заранее, до штукатурки и облицовки фасадной стены." },
+        flag:"НЕ ЗАБЫТЬ", detail:"20 этаж — доступ к фасаду для монтажа блока нужно продумать заранее, до штукатурки и облицовки фасадной стены." },
       { id:"p4_teply_pol", text:"Уложить кабель тёплого пола в 4 зонах (9,34 м²) и вывести терморегуляторы." },
       { id:"p4_router", text:"Определить точное место вывода для роутера и датчика протечки воды." },
       { id:"p4_schit", text:"Собрать электрический и слаботочный щиты, разместить трансформаторы для светодиодной подсветки." },
