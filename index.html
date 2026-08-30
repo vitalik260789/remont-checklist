@@ -500,14 +500,15 @@ async function toggleItem(id){
   state[id] = !state[id];
   updateUI();
   try{
-    await fetch(JSONBLOB_URL, {
+    const res = await fetch(JSONBLOB_URL, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "text/plain" },
       body: JSON.stringify(state)
     });
+    if(!res.ok) throw new Error("HTTP " + res.status);
     document.getElementById("syncNote").textContent = "Сохранено — видно всем по ссылке";
   }catch(e){
-    document.getElementById("syncNote").textContent = "Не удалось сохранить, попробуйте ещё раз";
+    document.getElementById("syncNote").textContent = "Не удалось сохранить: " + e.message;
   }
 }
 
@@ -542,12 +543,13 @@ function updateUI(){
 async function loadState(){
   try{
     const res = await fetch(JSONBLOB_URL);
+    if(!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
     state = data && typeof data === "object" ? data : {};
     document.getElementById("syncNote").textContent = "Синхронизировано";
   }catch(e){
     state = {};
-    document.getElementById("syncNote").textContent = "Новый чек-лист";
+    document.getElementById("syncNote").textContent = "Не удалось загрузить: " + e.message;
   }
   renderPhases();
   updateUI();
@@ -559,7 +561,7 @@ document.getElementById("resetBtn").addEventListener("click", async () => {
   try{
     await fetch(JSONBLOB_URL, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "text/plain" },
       body: JSON.stringify(state)
     });
   }catch(e){}
