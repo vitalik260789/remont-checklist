@@ -340,7 +340,7 @@
 
   <div class="gate-block">
     <div class="gate-title">Точка невозврата — оштукатуривание</div>
-    <div class="gate-text">После старта штукатурных работ скрытые коробки дверей, закладные, электрика и сантехника «замуровываются» в стену. Любая правка после этого момента — это демонтаж штукатурки.</div>
+    <div class="gate-text">После старта штукатурных работ дверные коробки, закладные, электрика и сантехника «замуровываются» в стену. Любая правка после этого момента — это демонтаж штукатурки.</div>
     <div class="gate-status locked" id="gateStatus">🔒 Закрыто: не все пункты выполнены</div>
   </div>
 
@@ -366,199 +366,600 @@
 
 </div>
 
+<script id="state-data" type="application/json">{}</script>
 <script>
-const PHASES = [
-  {
-    title: "Согласования и демонтаж",
-    sub: "Лист 1–2",
-    items: [
-      { id:"p1_soglas", text:"Согласовать перепланировку в соответствующих органах.",
-        detail:"Проект прямо рекомендует официальное согласование — без него перегородки и сантехнические переносы юридически не закреплены." },
-      { id:"p1_demontazh", text:"Демонтировать старые перегородки и убрать демонтируемые элементы по плану демонтажа." },
-      { id:"p1_radiator_demontazh", text:"Демонтировать один радиатор (полный демонтаж) и подготовить точки под 3 переноса + 1 замену." },
-    ]
-  },
-  {
-    title: "Перегородки",
-    sub: "Гардеробная + прочие",
-    items: [
-      { id:"p2_gazosilikat", text:"Возвести перегородку гардеробной — газосиликат 100 мм, ~4,5 пог. м." },
-      { id:"p2_keramzit", text:"Возвести остальные перегородки — керамзитоблок 100 мм, ~15 пог. м.",
-        detail:"Проверить фактическую длину стен по месту перед добором материала: по счёту с mamont.by объём может закрывать только ~7–9 пог. м из нужных 15." },
-      { id:"p2_dveri", text:"Установить и выставить скрытые дверные коробки: ДВ-02 ×3 (800×2400) и ДВ-03 (800×2400).",
-        flag:"НЕ ЗАБЫТЬ", detail:"Скрытые коробки должны быть точно выставлены и оштукатурены заподлицо до начала любой финишной отделки стен — самый часто забываемый пункт." },
-      { id:"p2_anchors", text:"Заложить закладные под турник и скалодром в комнате мальчика на этапе возведения перегородки.",
-        flag:"НЕ ЗАБЫТЬ", detail:"Закладные нельзя добавить после — только при монтаже самой перегородки. Керамзитоблок предпочтителен там, где нужна анкеровка." },
-      { id:"p2_penа", text:"Запенить зазоры вокруг перегородок — низ и верх.",
-        detail:"Внизу — прорези в полу, оставшиеся после монтажа блоков. Вверху — зазор между перегородкой и потолком (компенсация усадки плиты). Пена должна быть монтажная, без излишков — после высыхания срезать заподлицо." },
-    ]
-  },
-  {
-    title: "Сантехника и радиаторы",
-    sub: "Черновая разводка",
-    items: [
-      { id:"p3_santeh", text:"Развести ХВС / ГВС / канализацию по всем точкам (кухня, санузел, постирочная)." },
-      { id:"p3_stояки", text:"Предусмотреть ревизионные люки на каждом стояке канализации." },
-      { id:"p3_pipes", text:"По возможности подвинуть трубы ближе к стене — согласовать со специалистом." },
-      { id:"p3_radiators", text:"Выполнить 3 переноса радиатора и замену радиатора на новых точках." },
-      { id:"p3_toilet", text:"Установить инсталляцию для унитаза (короб ГКЛВ, h=1200 от чистового пола)." },
-      { id:"p3_shower", text:"Смонтировать бортик для душа (h=150) и встраиваемый трап с выдержанным уклоном." },
-      { id:"p3_korob", text:"Смонтировать короб ГКЛ/ГКЛВ в санузле — после сантехнических работ, короб полотенцесушителя h=220." },
-    ]
-  },
-  {
-    title: "Электрика и слаботочка",
-    sub: "Полный черновой монтаж",
-    items: [
-      { id:"p4_rozetki", text:"Развести розетки 220V и влагозащищённые розетки по всем помещениям." },
-      { id:"p4_special", text:"Вывести спец. точки: кондиционер, бойлер, полотенцесушитель, видеодомофон, оптический кабель." },
-      { id:"p4_ac", text:"Вывести кабель и трассу под кондиционер на фасад (h=2450), мощность согласовать со специалистом.",
-        flag:"НЕ ЗАБЫТЬ", detail:"24 этаж — доступ к фасаду для монтажа блока нужно продумать заранее, до штукатурки и облицовки фасадной стены." },
-      { id:"p4_teply_pol", text:"Уложить кабель тёплого пола в 4 зонах (9,34 м²) и вывести терморегуляторы." },
-      { id:"p4_router", text:"Определить точное место вывода для роутера и датчика протечки воды." },
-      { id:"p4_schit", text:"Собрать электрический и слаботочный щиты, разместить трансформаторы для светодиодной подсветки." },
-    ]
-  },
-  {
-    title: "Потолки и уровни",
-    sub: "До облицовки стен",
-    items: [
-      { id:"p5_potolok_marker", text:"Согласовать с монтажниками маркеры опуска потолка (-100 мм) и теневой профиль (16,05 м)." },
-      { id:"p5_uchp", text:"Зафиксировать уровень чистового пола (УЧП) и положение теневого плинтуса по всему контуру.",
-        flag:"НЕ ЗАБЫТЬ", detail:"УЧП и скрытый плинтус — это отметка, от которой считаются все дверные пороги и стыки покрытий (см. Узел 1). Её нужно закрепить до штукатурки, иначе поедут все дверные притворы." },
-    ]
-  },
-];
+function boot(state){
 
-const POST_GATE = {
-  title: "После штукатурки",
-  sub: "Финишная отделка",
-  items: [
-    { id:"p6_shpatlevka", text:"Выполнить шпатлёвку стен — «под шпатлёвку» это ещё не финиш, а промежуточный этап." },
-    { id:"p6_pokraska", text:"Выполнить финишную покраску стен во всех помещениях (~160 м² поверхности)." },
-    { id:"p6_polы", text:"Уложить напольные покрытия по плану раскладки (плитка в мокрых зонах, ламинат/кварц-винил в остальных)." },
-    { id:"p6_plintus", text:"Смонтировать напольный плинтус (~50,88 м) после расстановки мебели." },
-    { id:"p6_potolok_finish", text:"Смонтировать натяжной и штукатурный потолок с закладными под светильники." },
-  ]
-};
+  const HEAD_HTML = `<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Чек-лист «до штукатурки» — 73 м², 24 этаж</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#e9ebe2;
+    --paper-line:#c7cdb8;
+    --ink:#20262b;
+    --ink-soft:#5a6570;
+    --blueprint:#2f5d8a;
+    --blueprint-dim:#a9bdd0;
+    --flag:#b3402f;
+    --flag-bg:#f4e2dd;
+    --gate:#a9781f;
+    --gate-bg:#efe3c6;
+    --done-hatch:#8a9c78;
+    --card-bg:#f4f5ee;
+    --shadow: 0 1px 0 rgba(32,38,43,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0/100% 28px,
+      linear-gradient(90deg, var(--paper-line) 1px, transparent 1px) 0 0/28px 100%,
+      var(--paper);
+    background-blend-mode:normal;
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    min-height:100vh;
+    padding:0 0 40px 0;
+  }
+  .sheet{
+    max-width:720px;
+    margin:0 auto;
+    padding:18px 16px 0 16px;
+  }
+  header.title{
+    border:1.5px solid var(--ink);
+    background:var(--card-bg);
+    padding:14px 16px;
+    position:relative;
+  }
+  .stamp{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:8px;
+  }
+  h1{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:20px;
+    font-weight:600;
+    margin:0 0 4px 0;
+    letter-spacing:-0.01em;
+  }
+  .subtitle{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    margin:0;
+    line-height:1.5;
+  }
+  .meta-row{
+    display:flex;
+    gap:18px;
+    margin-top:10px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    flex-wrap:wrap;
+  }
+  .meta-row span b{color:var(--ink);}
 
-const ALL_ITEMS = PHASES.flatMap(p => p.items).concat(POST_GATE.items);
-const GATE_ITEMS = PHASES.flatMap(p => p.items); // items required before the gate opens
-const STORAGE_KEY = "renovation-73m2-24f-checklist-v1";
+  .progress-wrap{
+    margin-top:14px;
+    border:1.5px solid var(--ink);
+    background:var(--card-bg);
+    padding:12px 16px 14px 16px;
+  }
+  .progress-label{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    margin-bottom:8px;
+  }
+  #progressPct{font-size:16px; font-weight:700; color:var(--blueprint);}
+  .progress-track{
+    height:14px;
+    background:repeating-linear-gradient(45deg, var(--paper) 0 4px, #dfe2d4 4px 8px);
+    border:1px solid var(--ink);
+    position:relative;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--blueprint);
+    width:0%;
+    transition:width .35s ease;
+  }
+  .gate-note{
+    margin-top:10px;
+    font-size:12px;
+    color:var(--ink-soft);
+    display:flex;
+    gap:8px;
+    align-items:flex-start;
+  }
+  .gate-note svg{flex:0 0 auto; margin-top:2px;}
 
-let state = {};
+  .phase{
+    margin-top:22px;
+  }
+  .phase-head{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    border-bottom:1.5px solid var(--ink);
+    padding-bottom:6px;
+    margin-bottom:10px;
+  }
+  .phase-num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--blueprint);
+    border:1px solid var(--blueprint);
+    padding:1px 6px;
+  }
+  .phase-title{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:14px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+  .phase-sub{
+    margin-left:auto;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+  }
 
-function renderPhases(){
-  const container = document.getElementById("phases");
-  container.innerHTML = "";
-  PHASES.forEach((phase, idx) => {
-    const el = document.createElement("div");
-    el.className = "phase";
-    el.innerHTML = `
+  .item{
+    display:flex;
+    gap:12px;
+    padding:10px 10px 10px 4px;
+    border-bottom:1px solid var(--paper-line);
+    cursor:pointer;
+    align-items:flex-start;
+  }
+  .item:hover{background:rgba(47,93,138,0.05);}
+  .item:last-child{border-bottom:none;}
+
+  .box{
+    flex:0 0 auto;
+    width:20px;height:20px;
+    margin-top:1px;
+    border:1.5px solid var(--ink);
+    background:var(--card-bg);
+    position:relative;
+  }
+  .item.checked .box{
+    background:
+      repeating-linear-gradient(45deg, var(--done-hatch) 0 2px, transparent 2px 6px);
+    border-color:var(--done-hatch);
+  }
+  .item.checked .box::after{
+    content:"";
+    position:absolute;
+    left:3px; top:5px;
+    width:11px; height:6px;
+    border-left:2.5px solid #2e3a2a;
+    border-bottom:2.5px solid #2e3a2a;
+    transform:rotate(-45deg);
+  }
+
+  .item-body{flex:1;}
+  .item-text{
+    font-size:14px;
+    line-height:1.45;
+  }
+  .item.checked .item-text{
+    color:var(--ink-soft);
+    text-decoration:line-through;
+    text-decoration-color:var(--ink-soft);
+  }
+  .item-detail{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:3px;
+    line-height:1.4;
+  }
+  .flag{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    margin-top:6px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    color:var(--flag);
+    background:var(--flag-bg);
+    border:1px solid var(--flag);
+    padding:2px 7px;
+    letter-spacing:.03em;
+  }
+
+  .gate-block{
+    margin-top:24px;
+    border:2px solid var(--gate);
+    background:var(--gate-bg);
+    padding:16px;
+    text-align:center;
+    position:relative;
+  }
+  .gate-block::before{
+    content:"ГРАНИЦА";
+    position:absolute;
+    top:-9px; left:16px;
+    background:var(--paper);
+    padding:0 6px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:.15em;
+    color:var(--gate);
+  }
+  .gate-title{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:700;
+    font-size:15px;
+    color:var(--gate);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .gate-text{
+    font-size:12.5px;
+    color:#5c4a1f;
+    max-width:480px;
+    margin:0 auto;
+    line-height:1.5;
+  }
+  .gate-status{
+    margin-top:10px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    font-weight:600;
+  }
+  .gate-status.locked{color:var(--flag);}
+  .gate-status.open{color:#3a6b2e;}
+
+  footer.stamp-block{
+    margin-top:26px;
+    border:1.5px solid var(--ink);
+    background:var(--card-bg);
+  }
+  .stamp-row{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+  }
+  .stamp-cell{
+    border-right:1px solid var(--ink);
+    border-bottom:1px solid var(--ink);
+    padding:7px 9px;
+  }
+  .stamp-cell:last-child{border-right:none;}
+  .stamp-cell .k{color:var(--ink-soft); display:block; font-size:9px; text-transform:uppercase; letter-spacing:.08em; margin-bottom:2px;}
+  .stamp-row:last-child .stamp-cell{border-bottom:none;}
+
+  .actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:14px;
+    padding-bottom:8px;
+  }
+  .reset-btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    background:none;
+    border:1px solid var(--ink-soft);
+    color:var(--ink-soft);
+    padding:6px 12px;
+    cursor:pointer;
+  }
+  .reset-btn:hover{border-color:var(--flag); color:var(--flag);}
+  .sync-note{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    color:var(--ink-soft);
+  }
+
+  @media (max-width:420px){
+    h1{font-size:17px;}
+    .phase-title{font-size:12.5px;}
+    .stamp-row{grid-template-columns:1fr 1fr;}
+  }
+</style>`;
+
+  const BODY_SHELL_HTML = `<div class="sheet">
+
+  <header class="title">
+    <div class="stamp">
+      <span>Дизайн-проект · Алевтина Шевченко</span>
+      <span>73 м² · 24 этаж</span>
+    </div>
+    <h1>Чек-лист «до штукатурки»</h1>
+    <p class="subtitle">Все пункты этого списка нужно закрыть <b>до</b> оштукатуривания стен — после него менять разводку электрики, сантехники и положение коробов станет дорого и почти невозможно.</p>
+    <div class="meta-row">
+      <span>Стадия: <b>чёрновая</b></span>
+      <span>Цель отделки: <b>под покраску</b></span>
+      <span>Санузел: <b>мокрая зона, короба ГКЛВ</b></span>
+    </div>
+  </header>
+
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>ГОТОВНОСТЬ К ШТУКАТУРКЕ</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="gate-note">
+      <span>Отмечайте пункты по мере выполнения — список общий: изменения видны всем, у кого есть эта ссылка.</span>
+    </div>
+  </div>
+
+  <div id="phases"></div>
+
+  <div class="gate-block">
+    <div class="gate-title">Точка невозврата — оштукатуривание</div>
+    <div class="gate-text">После старта штукатурных работ дверные коробки, закладные, электрика и сантехника «замуровываются» в стену. Любая правка после этого момента — это демонтаж штукатурки.</div>
+    <div class="gate-status locked" id="gateStatus">🔒 Закрыто: не все пункты выполнены</div>
+  </div>
+
+  <div class="phase" id="postGatePhase"></div>
+
+  <footer class="stamp-block">
+    <div class="stamp-row">
+      <div class="stamp-cell"><span class="k">Объект</span>Квартира, 73 м², 24 этаж</div>
+      <div class="stamp-cell"><span class="k">Проект</span>Дизайн-проект, 10 листов</div>
+      <div class="stamp-cell"><span class="k">Дизайнер</span>Алевтина Шевченко</div>
+    </div>
+    <div class="stamp-row">
+      <div class="stamp-cell"><span class="k">Всего пунктов</span><span id="totalCount">—</span></div>
+      <div class="stamp-cell"><span class="k">Выполнено</span><span id="doneCount">—</span></div>
+      <div class="stamp-cell"><span class="k">Флагов «не забыть»</span><span id="flagCount">—</span></div>
+    </div>
+  </footer>
+
+  <div class="actions">
+    <span class="sync-note" id="syncNote">Загрузка…</span>
+    <button class="reset-btn" id="resetBtn">Сбросить всё</button>
+  </div>
+
+</div>`;
+
+  const PHASES = [
+    {
+      title: "Согласования и демонтаж",
+      sub: "Лист 1–2",
+      items: [
+        { id:"p1_soglas", text:"Согласовать перепланировку в соответствующих органах.",
+          detail:"Проект прямо рекомендует официальное согласование — без него перегородки и сантехнические переносы юридически не закреплены." },
+        { id:"p1_demontazh", text:"Демонтировать старые перегородки и убрать демонтируемые элементы по плану демонтажа." },
+        { id:"p1_radiator_demontazh", text:"Демонтировать один радиатор (полный демонтаж) и подготовить точки под 3 переноса + 1 замену." },
+      ]
+    },
+    {
+      title: "Перегородки",
+      sub: "Гардеробная + прочие",
+      items: [
+        { id:"p2_gazosilikat", text:"Возвести перегородку гардеробной — газосиликат 100 мм, ~4,5 пог. м." },
+        { id:"p2_keramzit", text:"Возвести остальные перегородки — керамзитоблок 100 мм, ~15 пог. м.",
+          detail:"Проверить фактическую длину стен по месту перед добором материала: по счёту с mamont.by объём может закрывать только ~7–9 пог. м из нужных 15." },
+        { id:"p2_dveri", text:"Установить и выставить дверные коробки под наличник (обычный монтаж, не скрытый): ДВ-02 ×3 (800×2400) и ДВ-03 (800×2400).",
+          flag:"НЕ ЗАБЫТЬ", detail:"Коробки должны быть точно выставлены по уровню и вертикали до начала финишной отделки стен — самый часто забываемый пункт." },
+        { id:"p2_anchors", text:"Заложить закладные под турник и скалодром в комнате мальчика на этапе возведения перегородки.",
+          flag:"НЕ ЗАБЫТЬ", detail:"Закладные нельзя добавить после — только при монтаже самой перегородки. Керамзитоблок предпочтителен там, где нужна анкеровка." },
+        { id:"p2_penа", text:"Запенить зазоры вокруг перегородок — низ и верх.",
+          detail:"Внизу — прорези в полу, оставшиеся после монтажа блоков. Вверху — зазор между перегородкой и потолком (компенсация усадки плиты). Пена должна быть монтажная, без излишков — после высыхания срезать заподлицо." },
+      ]
+    },
+    {
+      title: "Сантехника и радиаторы",
+      sub: "Черновая разводка",
+      items: [
+        { id:"p3_santeh", text:"Развести ХВС / ГВС / канализацию по всем точкам (кухня, санузел, постирочная)." },
+        { id:"p3_stояки", text:"Предусмотреть ревизионные люки на каждом стояке канализации." },
+        { id:"p3_pipes", text:"По возможности подвинуть трубы ближе к стене — согласовать со специалистом." },
+        { id:"p3_radiators", text:"Выполнить 3 переноса радиатора и замену радиатора на новых точках." },
+        { id:"p3_toilet", text:"Установить инсталляцию для унитаза (короб ГКЛВ, h=1200 от чистового пола)." },
+        { id:"p3_shower", text:"Смонтировать бортик для душа (h=150) и встраиваемый трап с выдержанным уклоном." },
+        { id:"p3_korob", text:"Смонтировать короб ГКЛ/ГКЛВ в санузле — после сантехнических работ, короб полотенцесушителя h=220." },
+      ]
+    },
+    {
+      title: "Электрика и слаботочка",
+      sub: "Полный черновой монтаж",
+      items: [
+        { id:"p4_rozetki", text:"Развести розетки 220V и влагозащищённые розетки по всем помещениям." },
+        { id:"p4_special", text:"Вывести спец. точки: кондиционер, бойлер, полотенцесушитель, видеодомофон, оптический кабель." },
+        { id:"p4_ac", text:"Вывести кабель и трассу под кондиционер на фасад (h=2450), мощность согласовать со специалистом.",
+          flag:"НЕ ЗАБЫТЬ", detail:"24 этаж — доступ к фасаду для монтажа блока нужно продумать заранее, до штукатурки и облицовки фасадной стены." },
+        { id:"p4_teply_pol", text:"Уложить кабель тёплого пола в 4 зонах (9,34 м²) и вывести терморегуляторы." },
+        { id:"p4_router", text:"Определить точное место вывода для роутера и датчика протечки воды." },
+        { id:"p4_schit", text:"Собрать электрический и слаботочный щиты, разместить трансформаторы для светодиодной подсветки." },
+      ]
+    },
+    {
+      title: "Потолки и уровни",
+      sub: "До облицовки стен",
+      items: [
+        { id:"p5_potolok_marker", text:"Согласовать с монтажниками маркеры опуска потолка (-100 мм) и теневой профиль (16,05 м)." },
+        { id:"p5_uchp", text:"Зафиксировать уровень чистового пола (УЧП) и положение теневого плинтуса по всему контуру.",
+          flag:"НЕ ЗАБЫТЬ", detail:"УЧП и скрытый плинтус — это отметка, от которой считаются все дверные пороги и стыки покрытий (см. Узел 1). Её нужно закрепить до штукатурки, иначе поедут все дверные притворы." },
+      ]
+    },
+  ];
+
+  const POST_GATE = {
+    title: "После штукатурки",
+    sub: "Финишная отделка",
+    items: [
+      { id:"p6_shpatlevka", text:"Выполнить шпатлёвку стен — «под шпатлёвку» это ещё не финиш, а промежуточный этап." },
+      { id:"p6_pokraska", text:"Выполнить финишную покраску стен во всех помещениях (~160 м² поверхности)." },
+      { id:"p6_polы", text:"Уложить напольные покрытия по плану раскладки (плитка в мокрых зонах, ламинат/кварц-винил в остальных)." },
+      { id:"p6_plintus", text:"Смонтировать напольный плинтус (~50,88 м) после расстановки мебели." },
+      { id:"p6_potolok_finish", text:"Смонтировать натяжной и штукатурный потолок с закладными под светильники." },
+    ]
+  };
+
+  const ALL_ITEMS = PHASES.flatMap(p => p.items).concat(POST_GATE.items);
+  const GATE_ITEMS = PHASES.flatMap(p => p.items); // items required before the gate opens
+
+  function renderPhases(){
+    const container = document.getElementById("phases");
+    container.innerHTML = "";
+    PHASES.forEach((phase, idx) => {
+      const el = document.createElement("div");
+      el.className = "phase";
+      el.innerHTML = `
+        <div class="phase-head">
+          <span class="phase-num">${String(idx+1).padStart(2,'0')}</span>
+          <span class="phase-title">${phase.title}</span>
+          <span class="phase-sub">${phase.sub}</span>
+        </div>
+        <div class="items"></div>
+      `;
+      const itemsWrap = el.querySelector(".items");
+      phase.items.forEach(item => itemsWrap.appendChild(renderItem(item)));
+      container.appendChild(el);
+    });
+
+    const postEl = document.getElementById("postGatePhase");
+    postEl.innerHTML = `
       <div class="phase-head">
-        <span class="phase-num">${String(idx+1).padStart(2,'0')}</span>
-        <span class="phase-title">${phase.title}</span>
-        <span class="phase-sub">${phase.sub}</span>
+        <span class="phase-num">${String(PHASES.length+1).padStart(2,'0')}</span>
+        <span class="phase-title">${POST_GATE.title}</span>
+        <span class="phase-sub">${POST_GATE.sub}</span>
       </div>
       <div class="items"></div>
     `;
-    const itemsWrap = el.querySelector(".items");
-    phase.items.forEach(item => itemsWrap.appendChild(renderItem(item)));
-    container.appendChild(el);
-  });
-
-  const postEl = document.getElementById("postGatePhase");
-  postEl.innerHTML = `
-    <div class="phase-head">
-      <span class="phase-num">${String(PHASES.length+1).padStart(2,'0')}</span>
-      <span class="phase-title">${POST_GATE.title}</span>
-      <span class="phase-sub">${POST_GATE.sub}</span>
-    </div>
-    <div class="items"></div>
-  `;
-  const postItemsWrap = postEl.querySelector(".items");
-  POST_GATE.items.forEach(item => postItemsWrap.appendChild(renderItem(item)));
-}
-
-function renderItem(item){
-  const row = document.createElement("div");
-  row.className = "item" + (state[item.id] ? " checked" : "");
-  row.dataset.id = item.id;
-  row.innerHTML = `
-    <div class="box"></div>
-    <div class="item-body">
-      <div class="item-text">${item.text}</div>
-      ${item.detail ? `<div class="item-detail">${item.detail}</div>` : ""}
-      ${item.flag ? `<div class="flag">⚑ ${item.flag}</div>` : ""}
-    </div>
-  `;
-  row.addEventListener("click", () => toggleItem(item.id));
-  return row;
-}
-
-async function toggleItem(id){
-  state[id] = !state[id];
-  updateUI();
-  try{
-    await window.storage.set(STORAGE_KEY, JSON.stringify(state), true);
-    document.getElementById("syncNote").textContent = "Сохранено — видно всем по ссылке";
-  }catch(e){
-    document.getElementById("syncNote").textContent = "Не удалось сохранить, попробуйте ещё раз";
+    const postItemsWrap = postEl.querySelector(".items");
+    POST_GATE.items.forEach(item => postItemsWrap.appendChild(renderItem(item)));
   }
-}
 
-function updateUI(){
-  document.querySelectorAll(".item").forEach(row => {
-    const id = row.dataset.id;
-    row.classList.toggle("checked", !!state[id]);
-  });
-
-  const total = ALL_ITEMS.length;
-  const done = ALL_ITEMS.filter(i => state[i.id]).length;
-  const pct = total ? Math.round((done/total)*100) : 0;
-  document.getElementById("progressPct").textContent = pct + "%";
-  document.getElementById("progressFill").style.width = pct + "%";
-  document.getElementById("totalCount").textContent = total;
-  document.getElementById("doneCount").textContent = done;
-  const flagCount = ALL_ITEMS.filter(i => i.flag).length;
-  document.getElementById("flagCount").textContent = flagCount;
-
-  const gateDone = GATE_ITEMS.every(i => state[i.id]);
-  const gateStatus = document.getElementById("gateStatus");
-  if(gateDone){
-    gateStatus.textContent = "✅ Открыто: можно приступать к штукатурке";
-    gateStatus.className = "gate-status open";
-  } else {
-    const remaining = GATE_ITEMS.filter(i => !state[i.id]).length;
-    gateStatus.textContent = `🔒 Закрыто: осталось пунктов — ${remaining}`;
-    gateStatus.className = "gate-status locked";
+  function renderItem(item){
+    const row = document.createElement("div");
+    row.className = "item" + (state[item.id] ? " checked" : "");
+    row.dataset.id = item.id;
+    row.innerHTML = `
+      <div class="box"></div>
+      <div class="item-body">
+        <div class="item-text">${item.text}</div>
+        ${item.detail ? `<div class="item-detail">${item.detail}</div>` : ""}
+        ${item.flag ? `<div class="flag">⚑ ${item.flag}</div>` : ""}
+      </div>
+    `;
+    row.addEventListener("click", () => toggleItem(item.id));
+    return row;
   }
-}
 
-async function loadState(){
-  try{
-    const result = await window.storage.get(STORAGE_KEY, true);
-    state = result && result.value ? JSON.parse(result.value) : {};
-    document.getElementById("syncNote").textContent = "Синхронизировано";
-  }catch(e){
+  function updateUI(){
+    document.querySelectorAll(".item").forEach(row => {
+      const id = row.dataset.id;
+      row.classList.toggle("checked", !!state[id]);
+    });
+
+    const total = ALL_ITEMS.length;
+    const done = ALL_ITEMS.filter(i => state[i.id]).length;
+    const pct = total ? Math.round((done/total)*100) : 0;
+    document.getElementById("progressPct").textContent = pct + "%";
+    document.getElementById("progressFill").style.width = pct + "%";
+    document.getElementById("totalCount").textContent = total;
+    document.getElementById("doneCount").textContent = done;
+    const flagCount = ALL_ITEMS.filter(i => i.flag).length;
+    document.getElementById("flagCount").textContent = flagCount;
+
+    const gateDone = GATE_ITEMS.every(i => state[i.id]);
+    const gateStatus = document.getElementById("gateStatus");
+    if(gateDone){
+      gateStatus.textContent = "✅ Открыто: можно приступать к штукатурке";
+      gateStatus.className = "gate-status open";
+    } else {
+      const remaining = GATE_ITEMS.filter(i => !state[i.id]).length;
+      gateStatus.textContent = `🔒 Закрыто: осталось пунктов — ${remaining}`;
+      gateStatus.className = "gate-status locked";
+    }
+  }
+
+  function buildDocument(newState){
+    return `<!doctype html>
+<html lang="ru">
+<head>
+${HEAD_HTML}
+</head>
+<body>
+${BODY_SHELL_HTML}
+<script id="state-data" type="application/json">${JSON.stringify(newState)}<\/script>
+<script>(${boot.toString()})(${JSON.stringify(newState)});<\/script>
+</body>
+</html>`;
+  }
+
+  let artifactPromise = null;
+  function getArtifact(){
+    if(!artifactPromise){
+      artifactPromise = (window.claude && window.claude.use)
+        ? window.claude.use("artifact")
+        : Promise.resolve(null);
+    }
+    return artifactPromise;
+  }
+
+  let publishChain = Promise.resolve();
+  function queuePublish(newState){
+    publishChain = publishChain.then(() => doPublish(newState));
+    return publishChain;
+  }
+
+  async function doPublish(newState){
+    const syncNote = document.getElementById("syncNote");
+    const artifact = await getArtifact();
+    if(!artifact){
+      if(syncNote) syncNote.textContent = "Синхронизация недоступна — отметки сохранятся только в этой вкладке";
+      return;
+    }
+    try{
+      await artifact.publish(buildDocument(newState));
+      if(syncNote) syncNote.textContent = "Сохранено — видно всем по ссылке";
+    }catch(err){
+      const code = err && err.code;
+      if(code === "conflict"){
+        return; // a newer version was published; this view is reloading to it
+      }
+      if(code === "not_writer" || code === "not_granted"){
+        if(syncNote) syncNote.textContent = "Только просмотр — изменения не сохраняются для остальных";
+        return;
+      }
+      if(syncNote) syncNote.textContent = "Не удалось сохранить, попробуйте ещё раз";
+    }
+  }
+
+  function toggleItem(id){
+    state[id] = !state[id];
+    updateUI();
+    queuePublish(state);
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    if(!confirm("Сбросить все отметки для всех, у кого есть эта ссылка?")) return;
     state = {};
-    document.getElementById("syncNote").textContent = "Новый чек-лист";
-  }
+    updateUI();
+    queuePublish(state);
+  });
+
   renderPhases();
   updateUI();
+  document.getElementById("syncNote").textContent = "Синхронизировано";
 }
 
-document.getElementById("resetBtn").addEventListener("click", async () => {
-  if(!confirm("Сбросить все отметки для всех, у кого есть эта ссылка?")) return;
-  state = {};
-  try{
-    await window.storage.set(STORAGE_KEY, JSON.stringify(state), true);
-  }catch(e){}
-  renderPhases();
-  updateUI();
-});
-
-loadState();
+boot(JSON.parse(document.getElementById("state-data").textContent || "{}"));
 </script>
 </body>
 </html>
