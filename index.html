@@ -560,12 +560,35 @@ async function loadState(){
     state = data && typeof data === "object" ? data : {};
     delete state.status; // remove the jsonbin placeholder field
     document.getElementById("syncNote").textContent = "Синхронизировано";
+    await applyResetMigration();
   }catch(e){
     state = {};
     document.getElementById("syncNote").textContent = "Не удалось загрузить: " + e.message;
   }
   renderPhases();
   updateUI();
+}
+
+// Одноразовый сброс отметок p2_dveri и p5_uchp после пересмотра текста этих
+// пунктов (двери и плинтус перестали быть скрытого монтажа).
+async function applyResetMigration(){
+  if(state._resetDveriPlintusV1) return;
+  const hadMark = state.p2_dveri || state.p5_uchp;
+  delete state.p2_dveri;
+  delete state.p5_uchp;
+  state._resetDveriPlintusV1 = true;
+  if(hadMark){
+    try{
+      await fetch(JSONBIN_URL, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Master-Key": JSONBIN_MASTER_KEY
+        },
+        body: JSON.stringify(state)
+      });
+    }catch(e){}
+  }
 }
 
 document.getElementById("resetBtn").addEventListener("click", async () => {
